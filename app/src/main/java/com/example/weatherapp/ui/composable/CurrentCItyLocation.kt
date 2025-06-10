@@ -1,4 +1,4 @@
-package com.example.weatherapp.ui.composabale
+package com.example.weatherapp.ui.composable
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding

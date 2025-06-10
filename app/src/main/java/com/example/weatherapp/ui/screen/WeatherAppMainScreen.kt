@@ -23,6 +23,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
@@ -34,17 +36,61 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.weatherapp.R
-import com.example.weatherapp.ui.composabale.CurrentCItyLocation
-import com.example.weatherapp.ui.composabale.DailyDegreeRow
-import com.example.weatherapp.ui.composabale.DegreePreview
-import com.example.weatherapp.ui.composabale.HourlyWeatherBox
-import com.example.weatherapp.ui.composabale.WeatherInfoBox
+import com.example.weatherapp.domain.model.DailyWeather
+import com.example.weatherapp.domain.model.HourlyWeather
+import com.example.weatherapp.ui.composable.CurrentCItyLocation
+import com.example.weatherapp.ui.composable.DailyDegreeRow
+import com.example.weatherapp.ui.composable.DegreePreview
+import com.example.weatherapp.ui.composable.HourlyWeatherBox
+import com.example.weatherapp.ui.composable.WeatherInfoBox
 import com.example.weatherapp.ui.theme.DayPrimary
 import com.example.weatherapp.ui.theme.urbanist
+import com.example.weatherapp.ui.viewModel.WeatherViewModel
+import com.example.weatherapp.ui.viewModel.state.WeatherState
+import org.koin.java.KoinJavaComponent.getKoin
+
+
+@Composable
+fun WeatherAppMainScreen(
+    viewModel: WeatherViewModel = getKoin().get()
+) {
+    val state by viewModel.state.collectAsState()
+    WeatherAppMainContent(
+        state = state,
+        onChangeCurrentTemperature = viewModel::onCurrentTemperatureChange,
+        onChangeWeatherDescription = viewModel::onWeatherDescriptionChange,
+        onChangeWindSpeed = viewModel::onWindSpeedChange,
+        onChangeRain = viewModel::onRainChange,
+        onChangePressure = viewModel::onPressureChange ,
+        onChangeHumidity = viewModel::onHumidityChange,
+        onChangeUvIndex = viewModel::onUvIndexChange,
+        onChangeHourlyWeather =viewModel::onHourlyWeatherChange ,
+        onChangeDailyWeather = viewModel::onDailyWeatherChange,
+        onChangeMaxTemperature = viewModel::onMaxTemperatureChange,
+        onChangeMinTemperature = viewModel::onMinTemperatureChange,
+
+    )
+
+
+}
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun WeatherAppMainScreen(){
+private fun WeatherAppMainContent(
+    state: WeatherState,
+    onChangeCurrentTemperature: (Int) -> Unit,
+    onChangeWeatherDescription: (String) -> Unit,
+    onChangeWindSpeed: (Int) -> Unit,
+    onChangeRain: (Int) -> Unit,
+    onChangePressure: (Int) -> Unit,
+    onChangeHumidity: (Int) -> Unit,
+    onChangeUvIndex: (Int) -> Unit,
+    onChangeHourlyWeather: (List<HourlyWeather>) -> Unit,
+    onChangeDailyWeather: (List<DailyWeather>) -> Unit,
+    onChangeMaxTemperature: (Int) -> Unit,
+    onChangeMinTemperature: (Int) -> Unit,
+
+    ){
 
         LazyColumn(
             modifier = Modifier
@@ -79,7 +125,7 @@ fun WeatherAppMainScreen(){
 
             item {
                 DegreePreview(
-                    currentDegree = 24,
+                    currentDegree = state.currentTemperature,
                     maxDegree = 32,
                     minDegree = 20,
                     description = "Partly cloudy",

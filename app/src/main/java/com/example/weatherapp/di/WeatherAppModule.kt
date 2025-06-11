@@ -7,7 +7,7 @@ import com.example.weatherapp.ui.viewModel.WeatherViewModel
 import org.koin.dsl.module
 
     val appModule = module {
-        single { WeatherViewModel() }
+        single { WeatherViewModel(get()) }
         single <WeatherRepository>{ WeatherRepositoryImpl() }
         single { GetWeatherUseCase(get()) }
     }

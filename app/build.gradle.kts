@@ -58,9 +58,8 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
-    implementation(libs.logback.classic)
     implementation(libs.kotlinx.serialization.json)
-    implementation("io.insert-koin:koin-android:4.1.0")
+    implementation(libs.koin.android)
 
 
     testImplementation(libs.junit)

@@ -4,10 +4,11 @@ import com.example.weatherapp.domain.model.WeatherResponse
 import com.example.weatherapp.domain.repository.WeatherRepository
 
 class GetWeatherUseCase(
-    val weatherRepository: WeatherRepository
+    private val weatherRepository: WeatherRepository
 ) {
-    suspend  fun getWeatherData(): WeatherResponse {
+    suspend operator fun invoke(): WeatherResponse {
         return weatherRepository.getWeatherData()
     }
+
 
 }

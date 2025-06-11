@@ -36,8 +36,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.weatherapp.R
-import com.example.weatherapp.domain.model.DailyWeather
-import com.example.weatherapp.domain.model.HourlyWeather
 import com.example.weatherapp.ui.composable.CurrentCItyLocation
 import com.example.weatherapp.ui.composable.DailyDegreeRow
 import com.example.weatherapp.ui.composable.DegreePreview
@@ -48,6 +46,10 @@ import com.example.weatherapp.ui.theme.urbanist
 import com.example.weatherapp.ui.viewModel.WeatherViewModel
 import com.example.weatherapp.ui.viewModel.state.WeatherState
 import org.koin.java.KoinJavaComponent.getKoin
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
 
 
 @Composable
@@ -57,18 +59,6 @@ fun WeatherAppMainScreen(
     val state by viewModel.state.collectAsState()
     WeatherAppMainContent(
         state = state,
-        onChangeCurrentTemperature = viewModel::onCurrentTemperatureChange,
-        onChangeWeatherDescription = viewModel::onWeatherDescriptionChange,
-        onChangeWindSpeed = viewModel::onWindSpeedChange,
-        onChangeRain = viewModel::onRainChange,
-        onChangePressure = viewModel::onPressureChange ,
-        onChangeHumidity = viewModel::onHumidityChange,
-        onChangeUvIndex = viewModel::onUvIndexChange,
-        onChangeHourlyWeather =viewModel::onHourlyWeatherChange ,
-        onChangeDailyWeather = viewModel::onDailyWeatherChange,
-        onChangeMaxTemperature = viewModel::onMaxTemperatureChange,
-        onChangeMinTemperature = viewModel::onMinTemperatureChange,
-
     )
 
 
@@ -78,18 +68,6 @@ fun WeatherAppMainScreen(
 @Composable
 private fun WeatherAppMainContent(
     state: WeatherState,
-    onChangeCurrentTemperature: (Int) -> Unit,
-    onChangeWeatherDescription: (String) -> Unit,
-    onChangeWindSpeed: (Int) -> Unit,
-    onChangeRain: (Int) -> Unit,
-    onChangePressure: (Int) -> Unit,
-    onChangeHumidity: (Int) -> Unit,
-    onChangeUvIndex: (Int) -> Unit,
-    onChangeHourlyWeather: (List<HourlyWeather>) -> Unit,
-    onChangeDailyWeather: (List<DailyWeather>) -> Unit,
-    onChangeMaxTemperature: (Int) -> Unit,
-    onChangeMinTemperature: (Int) -> Unit,
-
     ){
 
         LazyColumn(
@@ -126,9 +104,9 @@ private fun WeatherAppMainContent(
             item {
                 DegreePreview(
                     currentDegree = state.currentTemperature,
-                    maxDegree = 32,
-                    minDegree = 20,
-                    description = "Partly cloudy",
+                    maxDegree = state.maxTemperature,
+                    minDegree = state.minTemperature,
+                    description = state.weatherDescription,
                 )
             }
 
@@ -141,7 +119,7 @@ private fun WeatherAppMainContent(
                     WeatherInfoBox(
                         modifier = Modifier.weight(1f),
                         icon = painterResource(id = R.drawable.fast_wind),
-                        value = "13 KM/h",
+                        value = "${state.windSpeed} KM/h",
                         title = "Wind"
 
                     )
@@ -149,7 +127,7 @@ private fun WeatherAppMainContent(
                     WeatherInfoBox(
                         modifier = Modifier.weight(1f),
                         icon = painterResource(id = R.drawable.humidity),
-                        value = "24%",
+                        value = "${state.humidity}%",
                         title = "Humidity"
 
                     )
@@ -157,7 +135,7 @@ private fun WeatherAppMainContent(
                     WeatherInfoBox(
                         modifier = Modifier.weight(1f),
                         icon = painterResource(id = R.drawable.rain),
-                        value = "2%",
+                        value = "${state.rain}%",
                         title = "Rain"
 
                     )
@@ -173,7 +151,7 @@ private fun WeatherAppMainContent(
                     WeatherInfoBox(
                         modifier = Modifier.weight(1f),
                         icon = painterResource(id = R.drawable.uv),
-                        value = "2",
+                        value = "${state.uvIndex}",
                         title = "UV Index"
 
                     )
@@ -181,7 +159,7 @@ private fun WeatherAppMainContent(
                     WeatherInfoBox(
                         modifier = Modifier.weight(1f),
                         icon = painterResource(id = R.drawable.arrow_down),
-                        value = "1012 hPa",
+                        value = "${state.pressure} hPa",
                         title = "Pressure"
 
                     )
@@ -189,7 +167,7 @@ private fun WeatherAppMainContent(
                     WeatherInfoBox(
                         modifier = Modifier.weight(1f),
                         icon = painterResource(id = R.drawable.temperature),
-                        value = "22°C",
+                        value = "${state.apparentTemperature} °C",
                         title = "Feels like"
 
                     )
@@ -224,13 +202,13 @@ private fun WeatherAppMainContent(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
 
                     ){
-                        items (count = 5){
+                        items(state.hourlyWeather.size){index->
 
 
                             HourlyWeatherBox(
                                 icon = painterResource(id = R.drawable.mainly_clear),
-                                degree = "24°C",
-                                hour = "10:00"
+                                degree = "${state.hourlyWeather[index]}°C",
+                                hour = state.hourlyTime[index].substringAfter("T")
                             )
 
                         }
@@ -269,12 +247,12 @@ private fun WeatherAppMainContent(
 
                     ){
                         Column  {
-                            for (i in 1..7){
+                            for (i in 0..<state.dailyTime.size){
                                 DailyDegreeRow(
-                                    day = "Monday",
+                                    day = getDayNameByDate(state.dailyTime[i]),
                                     icon = painterResource(id = R.drawable.mainly_clear),
-                                    maxDegree = "32°C",
-                                    minDegree = "20°C",
+                                    maxDegree = "${state.dailyMaxDegree[i]}°C",
+                                    minDegree = "${state.dailyMinDegree[i]}°C",
                                 )
 
                             }
@@ -286,3 +264,8 @@ private fun WeatherAppMainContent(
 
         }
     }
+private fun getDayNameByDate(date: String):String{
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    val parsedDate = LocalDate.parse(date,formatter)
+    return parsedDate.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
+}
